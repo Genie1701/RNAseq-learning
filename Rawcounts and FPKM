@@ -1,0 +1,9 @@
+#calculate the inner size
+head -n 10000000 Example.read1.fastq > Example.read1.bwa.fastq
+head -n 10000000 Example.read2.fastq > Example.read2.bwa.fastq
+bwa aln -t 8 Example.read1.bwa.fastq > Example.read1.bwa.sai
+bwa aln -t 8 Example.read2.bwa.fastq > Example.read2.bwa.sai
+bwa sampe Example.read1.bwa.sai Example.read2.bwa.sai Example.read1.bwa.fastq Example.read2.bwa.fastq > Example.bwa_sampe.sam
+samtools view -bS -o Example.bwa_sampe.bam Example.bwa_sampe.sam
+samtools sort Example.bwa_sampe.bam Example.bwa_sampe.sorted
+java -Xmx2g -jar /apps/picard-tools-2.0.1/picard.jar CollectInsertSizeMetrics INPUT=Example.bwa_sampe.sorted.bam OUTPUT=Example.picardInsertMetrics.txt HISTOGRAM_FILE=Example.picardInsertMetrics.pdf VALIDATION_STRINGENCY=SILENT
