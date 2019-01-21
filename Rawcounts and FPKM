@@ -7,3 +7,16 @@ bwa sampe Example.read1.bwa.sai Example.read2.bwa.sai Example.read1.bwa.fastq Ex
 samtools view -bS -o Example.bwa_sampe.bam Example.bwa_sampe.sam
 samtools sort Example.bwa_sampe.bam Example.bwa_sampe.sorted
 java -Xmx2g -jar /apps/picard-tools-2.0.1/picard.jar CollectInsertSizeMetrics INPUT=Example.bwa_sampe.sorted.bam OUTPUT=Example.picardInsertMetrics.txt HISTOGRAM_FILE=Example.picardInsertMetrics.pdf VALIDATION_STRINGENCY=SILENT
+#getting the reads
+awk '{if(NR%4==2) {count++; bases += length} } END{print bases/count}' Example.read1.fastq
+awk '{if(NR%4==2) {count++; bases += length} } END{print bases/count}' Example.read2.fastq 
+#building index
+bowtie2-build rnor6.fa rnor6
+samtools faidx rnor6.fa
+#Tophat mapping based on bowtie2 
+nohup tophat -p 16 -r 42 --mate-std-dev 75 --no-novel-juncs -G Ensembled.gtf /Bowtie2Index/rnor6 Example.read1.fastq Example.read2.fastq
+#cufflinks to ensemble getting the FPKM data
+cufflinks -p 16 -o cufflinks_out --max-bundle-frag 10000000 -G Ensembled_genes.gtf -M smallRNA.gtf -b rnor6.fa accepted_hits.bam 
+#htseq-count to get raw counts
+samtools sort -n accepted_hits.bam -o accepted_hits_name_sorted.bam 
+htseq-count -s no -f bam accepted_hits_name_sorted.bam Ensembled.gtf > Example.counts.txt
