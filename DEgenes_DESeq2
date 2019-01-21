@@ -1,0 +1,8 @@
+library(DESeq2)
+countData<-as.matrix(count_mat[,c(3:4,6:8)])      #  experiment vs control
+countData<-countData+1
+condition<-factor(c(rep("ctl",2),rep("exp",3)))
+coldata <- data.frame(row.names=colnames(countData), condition)
+dds <- DESeqDataSetFromMatrix(countData=countData, colData=coldata, design=~condition)
+dds <- DESeq(dds)
+res <- results(dds,cooksCutoff=FALSE)
